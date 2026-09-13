@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "SmartDoc AI - Lab 6",
+    "description": "Full HTTP contract for the SmartDoc AI capstone (CRUD, upload, AI analysis, agent).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "document_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health check (200)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "List documents (200)",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/documents", "host": ["{{base_url}}"], "path": ["documents"] }
+      }
+    },
+    {
+      "name": "Create document - valid (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status is 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('document_id', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"SmartDoc Notes\",\n  \"content\": \"FastAPI with AI\",\n  \"priority\": 2\n}"
+        },
+        "url": { "raw": "{{base_url}}/documents", "host": ["{{base_url}}"], "path": ["documents"] }
+      }
+    },
+    {
+      "name": "Create document - invalid (422)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["pm.test('status is 422', () => pm.response.to.have.status(422));"] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Missing content field\"\n}" },
+        "url": { "raw": "{{base_url}}/documents", "host": ["{{base_url}}"], "path": ["documents"] }
+      }
+    },
+    {
+      "name": "Get one document (200)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "{{document_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Get missing document (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["pm.test('status is 404', () => pm.response.to.have.status(404));"] }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/documents/999999", "host": ["{{base_url}}"], "path": ["documents", "999999"] }
+      }
+    },
+    {
+      "name": "Update document (200)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"SmartDoc Notes Updated\",\n  \"content\": \"FastAPI with AI - updated\",\n  \"priority\": 3\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "{{document_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Upload text/plain file (201)",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [{ "key": "file", "type": "file", "src": "" }]
+        },
+        "url": { "raw": "{{base_url}}/documents/upload", "host": ["{{base_url}}"], "path": ["documents", "upload"] }
+      }
+    },
+    {
+      "name": "Upload unsupported type (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["pm.test('status is 400', () => pm.response.to.have.status(400));"] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [{ "key": "file", "type": "file", "src": "" }]
+        },
+        "url": { "raw": "{{base_url}}/documents/upload", "host": ["{{base_url}}"], "path": ["documents", "upload"] }
+      }
+    },
+    {
+      "name": "AI analyze existing document (200)",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "{{document_id}}", "analyze"]
+        }
+      }
+    },
+    {
+      "name": "AI analyze missing document (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": { "exec": ["pm.test('status is 404', () => pm.response.to.have.status(404));"] }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{base_url}}/documents/999999/analyze",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "999999", "analyze"]
+        }
+      }
+    },
+    {
+      "name": "Agent ask a document question (200)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"List the available documents\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/agent/ask", "host": ["{{base_url}}"], "path": ["agent", "ask"] }
+      }
+    },
+    {
+      "name": "Delete document (200)",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{base_url}}/documents/{{document_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["documents", "{{document_id}}"]
+        }
+      }
+    }
+  ]
+}
